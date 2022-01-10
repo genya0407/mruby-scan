@@ -37,7 +37,9 @@ jobs:
         run: | 
           brew install gcc
       - name: Build
-        run: rake
+        run: |
+          rake
+          zip scan-${{ matrix.os }}.zip mruby/bin/scan
       - name: Upload dist directory artifacts
         uses: actions/upload-artifact@v1
         with:
