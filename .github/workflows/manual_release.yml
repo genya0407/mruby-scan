@@ -1,0 +1,110 @@
+name: Manual Release
+on:
+  workflow_dispatch:
+    inputs:
+      prev_ref:
+        description: 'Previous release reference (tag / commit)'
+        required: true
+      new_ref:
+        description: 'New release reference (branch / commit)'
+        required: true
+      tag_name:
+        dsecription: 'Tag name to create'
+        required: true
+
+jobs:
+  build:
+    name: Build
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+    runs-on: ${{ matrix.os }}
+    env:
+        MRUBY_VERSION: 3.0.0
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.new_ref }}
+      - name: Install packages on ubuntu
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: | 
+          sudo apt-get -qq update
+          sudo apt-get -qq install rake bison git gperf
+      - name: Install packages on macos
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: | 
+          brew install gcc
+      - name: Build
+        run: rake
+      - name: Upload dist directory artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: scan-${{ matrix.os }}
+          path: scan-${{ matrix.os }}.zip
+
+  create-release:
+    name: Create Github Release
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.new_ref }}
+      - name: resolve-new-ref
+        run: |
+          git checkout ${{ github.event.inputs.new_ref }}
+          echo "::set-output name=resolved-new-ref::$(git log -n1 --pretty=format:'%H')"
+      - name: Generate release note
+        env:
+          RESOLVED_NEW_REF: ${{ steps.resolve-new-ref.outputs.resolved-new-ref }}
+          NEW_REF: ${{ github.event.inputs.new_ref }}
+          PREV_REF: ${{ github.event.inputs.pref_ref }}
+          TAG_NAME: ${{ github.event.inputs.tag_name }}
+          REPO_URL: https://github.com/genya0407/mruby-scan
+        run: rake generate_release_note > release_body.txt
+      - id: create-release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.tag_name }}
+          release_name: Release ${{ github.event.inputs.tag_name }}
+          commitish: ${{ steps.resolve-new-ref.outputs.resolved-new-ref }}
+          draft: true
+          prerelease: false
+          body_path: release_body.txt
+      - run: |
+          echo '${{ steps.create-release.outputs.upload_url }}' > release_upload_url.txt
+      - uses: actions/upload-artifact@v1
+        with:
+          name: create-release
+          path: release_upload_url.txt
+
+  upload-release:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+    needs: [create-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v1
+        with:
+          name: create-release
+      - id: upload-url
+        run: |
+          echo "::set-output name=url::$(cat create-release/release_upload_url.txt)"
+      - uses: actions/download-artifact@v1
+        with:
+          name: scan-${{ matrix.os }}
+      - uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.upload-url.outputs.url }}
+          asset_path: ./scan-${{ matrix.os }}/scan-${{ matrix.os }}.zip
+          asset_name: scan-${{ matrix.os }}.zip
+          asset_content_type: application/zip
