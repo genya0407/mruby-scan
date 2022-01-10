@@ -8,27 +8,25 @@ module Scan
       remain = template_string
       @sseq = []
       while m = remain.match(/^(.*?)\{(.+?)\}(.*)$/)
-        @sseq.push(m[1])
+        @sseq.push([:string, m[1]])
         capture = m[2].match?(/\d+/) ? m[2].to_i : m[2]
-        @sseq.push(Placeholder.new(capture))
+        @sseq.push([:capture, capture])
         remain = m[3]
       end
-      @sseq.push(remain)
+      @sseq.push([:string, remain])
     end
 
     def render(params)
-      @sseq.map do |s|
-        case s
-        when String
-          s
-        when Placeholder
-          params[s.capture]
+      @sseq.map do |type, value|
+        case type
+        when :string
+          value
+        when :capture
+          params[value]
         else
-          raise "Unexpected object: #{s.inspect}"
+          raise "Unexpected object: #{[type, value].inspect}"
         end
       end.join("")
     end
-
-    class Placeholder < Struct.new(:capture); end
   end
 end

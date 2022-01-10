@@ -6,8 +6,10 @@ module Scan
 
     def match(line)
       format_params = {}
-      [line, *line.split(@delimiter_regex)].each.with_index do |capture, index|
+      index = 0
+      [line, *line.split(@delimiter_regex)].each do |capture|
         format_params[index] = capture
+        index += 1
       end
       format_params
     end
