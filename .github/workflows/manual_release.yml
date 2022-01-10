@@ -67,7 +67,7 @@ jobs:
           REPO_URL: https://github.com/genya0407/mruby-scan
         run: rake generate_release_note > release_body.txt
       - id: create-release
-        uses: actions/create-release@v1.0.0
+        uses: actions/create-release@v1.1.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
