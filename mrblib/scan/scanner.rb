@@ -33,16 +33,16 @@ module Scan
     end
 
     def scan(reader:, writer:)
-      output = StringIO.new
+      output = []
       reader
         .readlines
         .each do |line|
         matched_data = matcher.match(line.strip)
         next unless matched_data
         text = output_format.render(matched_data)
-        output.puts(text)
+        output << text
       end
-      writer.puts(output.string)
+      writer.puts(output.join("\n"))
     end
   end
 end

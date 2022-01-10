@@ -35,3 +35,18 @@ builds:
       branch: HEAD
       commit: 97cc4434519e85a0785a1b4cf6f872a220f772db
       version: 0.0.0
+    https://github.com/infrared-rb/mruby-optparse.git:
+      url: https://github.com/infrared-rb/mruby-optparse.git
+      branch: HEAD
+      commit: 0eda9787a166b1208a66dd149bed55efc747ec4a
+      version: 0.0.0
+    https://github.com/udzura/mruby-posix-regexp.git:
+      url: https://github.com/udzura/mruby-posix-regexp.git
+      branch: HEAD
+      commit: 62f521b9c62ef22be1ecdbe8d492c5cee1b47ba0
+      version: 0.4.1
+    https://github.com/syucream/mruby-rspec.git:
+      url: https://github.com/syucream/mruby-rspec.git
+      branch: master
+      commit: 752be48ab9b3b47e422c5a00837174cc09ebce10
+      version: 0.0.1
