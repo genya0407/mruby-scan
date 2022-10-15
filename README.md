@@ -1,27 +1,50 @@
-# mruby-scan   [![build](https://github.com/genya0407/mruby-scan/actions/workflows/ci.yml/badge.svg)](https://github.com/genya0407/mruby-scan/actions/workflows/ci.yml)
-Scan class
-## install by mrbgems
-- add conf.gem line to `build_config.rb`
+## Build
 
-```ruby
-MRuby::Build.new do |conf|
-
-    # ... (snip) ...
-
-    conf.gem :github => 'genya0407/mruby-scan'
-end
-```
-## example
-```ruby
-p Scan.hi
-#=> "hi!!"
-t = Scan.new "hello"
-p t.hello
-#=> "hello"
-p t.bye
-#=> "hello bye"
+```shell-session
+$ git clone https://github.com/genya0407/scan.git
+$ cd scan
+$ rake
+$ ./mruby/bin/scan --help
+Usage: scan [options] OUTPUT_FORMAT
+    -p [PATTERN]                     specify regexp
+    -d [DELIMITER]                   specify delimiter
 ```
 
-## License
-under the MIT License:
-- see LICENSE file
+# scan
+
+`scan` extracts desired pattern from stdin using regexp or delimiter.
+
+```shell
+$ cat regex.txt
+hogehoge_nyan
+hohho_nyan
+
+# numbered capture
+$ cat regex.txt | scan -p "(.+?)_(.+)" {1},{2}
+hogehoge,nyan
+hohho,nyan
+
+# named capture
+$ cat regex.txt | scan -p "(?<left>.+?)_(?<right>.+)" {left}:{right}
+hogehoge:nyan
+hohho:nyan
+
+$ cat hoge.csv
+aaa,bbb,ccc
+xxx,yyy,zzz
+
+# Using delimiter
+$ cat hoge.csv | scan -d , {3}
+ccc
+zzz
+
+$ cat hoge.tsv
+aaa     bbb     ccc
+xxx     yyy     zzz
+
+# default delimiter is '\s+'
+$ cat hoge.tsv | scan {2}
+bbb
+yyy
+```
+
